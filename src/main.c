@@ -15,31 +15,59 @@
 #include <stdio.h>
 #include <gsl/gsl_blas.h>
 
-#define WORLD_WIDTH 32
+#define WORLD_WIDTH 32 // Origo in top left corner, high up
 #define WORLD_HEIGHT 16
+#define transformNr 2
+
 const int startTemperature = 20;
 const int magmaTemperature = 99;
 
 char materials[WORLD_HEIGHT][WORLD_WIDTH];
 gsl_matrix *Temperature;
+gsl_matrix *Transforms[4]; // Left, up, right, down
 
 const char MATERIAL_AIR = 'a';
 const char MATERIAL_MAGMA = 'm';
 
 static void init(){
     Temperature = gsl_matrix_alloc(WORLD_HEIGHT, WORLD_WIDTH);
-    for(size_t i = 0; i<Temperature->size1; i++){
-        for(size_t j = 0; j<Temperature->size2; j++){
-            gsl_matrix_set(Temperature, i, j, startTemperature);
+    gsl_matrix_set_all(Temperature, 0.0);
+    gsl_matrix_set(Temperature, 3, 11, startTemperature);
+    gsl_matrix_set(Temperature, 0, 0, startTemperature);
+
+    for(int n = 0; n<transformNr; n++){
+        Transforms[n] = gsl_matrix_alloc(WORLD_HEIGHT, WORLD_HEIGHT);
+        gsl_matrix_set_all(Transforms[n], 0.0);
+    }
+    for(size_t i = 0; i<WORLD_HEIGHT; i++){
+        for(size_t j = 0; j<WORLD_HEIGHT; j++){
+            if(j == i - 1){
+                gsl_matrix_set(Transforms[0], i, j, 1);
+            }
+            if(j == i + 1){
+                gsl_matrix_set(Transforms[1], i, j, 1);
+            }
         }
     }
-    //for(size_t j = 0; j<Temperature->size2; j++){
-    //    gsl_matrix_set(Temperature, WORLD_HEIGHT-1, j, magmaTemperature);
-    //}
+   Transforms[2] = gsl_matrix_alloc(WORLD_WIDTH, WORLD_WIDTH);
+   gsl_matrix_set_all(Transforms[2], 0.0);
+   Transforms[3] = gsl_matrix_alloc(WORLD_WIDTH, WORLD_WIDTH);
+   gsl_matrix_set_all(Transforms[3], 0.0);
+
+    for(size_t i = 0; i<WORLD_WIDTH; i++){
+        for(size_t j = 0; j<WORLD_WIDTH; j++){
+            if(j == i - 1){
+                gsl_matrix_set(Transforms[2], i, j, 1);
+            }
+            if(j == i + 1){
+                gsl_matrix_set(Transforms[3], i, j, 1);
+            }
+        }
+    }
 }
 
 void printMatrix(gsl_matrix *m){
-    for(size_t i = m->size1-1; i>0; i--){
+    for(size_t i = 0; i<m->size1; i++){
         for(size_t j = 0; j<m->size2; j++){
             printf("%3g  ", gsl_matrix_get(m, i, j));
         }
@@ -47,14 +75,8 @@ void printMatrix(gsl_matrix *m){
     }
 }
 
-static void updateTemperature(){
-    gsl_matrix temp;
-    //gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Temperature, A2, 0.0, temp);
-
-}
-
 static void printArray(){
-    for(int h=WORLD_HEIGHT - 1; h>=0; h--) {
+    for(int h=0; h<WORLD_HEIGHT; h++) {
         printf("\n");
         for(int w=0; w<WORLD_WIDTH; w++) {
             printf("%c", materials[h][w]);
@@ -67,7 +89,7 @@ int main(int argc, char *argv[]){
 
     for(int h=0; h<WORLD_HEIGHT; h++) {
         for(int w=0; w<WORLD_WIDTH; w++) {
-            if(h<5) {
+            if(h>(WORLD_HEIGHT-5)) {
                 materials[h][w] = MATERIAL_MAGMA;
             }
             else {
@@ -75,33 +97,23 @@ int main(int argc, char *argv[]){
             }
         }
     }
+    printArray(materials);
     printf("Printing matrix\n");
     printMatrix(Temperature);
-}
-
-void test(){
     printf("\n");
-    printArray();
 
-    gsl_matrix *A1;
-    gsl_matrix *A2;
-    gsl_matrix *R;
-    A1 = gsl_matrix_alloc(2, 2);
-    A2 = gsl_matrix_alloc(2, 2);
-    R = gsl_matrix_alloc(2, 2);
-
-    gsl_matrix_set(A1, 0, 0, 1);
-    gsl_matrix_set(A1, 0, 1, 2);
-    gsl_matrix_set(A1, 1, 0, 3);
-    gsl_matrix_set(A1, 1, 1, 4);
-
-    gsl_matrix_set(A2, 0, 0, 1);
-    gsl_matrix_set(A2, 0, 1, 2);
-    gsl_matrix_set(A2, 1, 0, 3);
-    gsl_matrix_set(A2, 1, 1, 4);
-
-    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, A1, A2, 0.0, R);
+    gsl_matrix *temp;
+    temp = gsl_matrix_alloc(WORLD_HEIGHT, WORLD_WIDTH);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Transforms[0], Temperature, 0.0, temp);
     printf("\n");
-    //printMatrix(R);
-}
+    printMatrix(temp);
 
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Transforms[1], Temperature, 0.0, temp);
+    printf("\n");
+    printMatrix(temp);
+
+    temp = gsl_matrix_alloc(WORLD_HEIGHT, WORLD_WIDTH);
+    gsl_blas_dgemm(CblasNoTrans, CblasNoTrans, 1.0, Temperature, Transforms[2], 0.0, temp);
+    printf("\n");
+    printMatrix(temp);
+}
