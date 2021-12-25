@@ -42,30 +42,30 @@ a = np.array([
     ])
 
 b = np.array([
-    [8, 0, 0, 0, 0],
-    [0, 0, 0, 0, 8],
-    [0, 0, 0, 0, 0],
-    [0, 0, 0, 0, 0],
-    [0, 0, 8, 0, 0]
+    [300, 300, 300, 300, 300],
+    [300, 300, 300, 300, 300],
+    [300, 300, 300, 300, 300],
+    [300, 300, 300, 300, 300],
+    [300, 300, 300, 300, 300]
     ],
     dtype=float)
 
 
 t1 = 0.25 * np.array([
-    [ 4,  0,  0,  0,  0],
-    [ 2,  2,  1,  0,  0],
+    [ 2,  1,  0,  0,  1],
+    [ 1,  2,  1,  0,  0],
     [ 0,  1,  2,  1,  0],
-    [ 0,  0,  1,  2,  2],
-    [ 0,  0,  0,  0,  4]
+    [ 0,  0,  1,  2,  1],
+    [ 1,  0,  0,  1,  2]
     ],
     dtype=float)
 
 t2 = 0.25 * np.array([
-    [ 4,  2,  0,  0,  0],
-    [ 0,  2,  1,  0,  0],
+    [ 2,  1,  0,  0,  1],
+    [ 1,  2,  1,  0,  0],
     [ 0,  1,  2,  1,  0],
-    [ 0,  0,  1,  2,  0],
-    [ 0,  0,  0,  2,  4]
+    [ 0,  0,  1,  2,  1],
+    [ 1,  0,  0,  1,  2]
     ],
     dtype=float)
 
@@ -73,11 +73,14 @@ t2 = 0.25 * np.array([
 print('\nOriginal:')
 print(b)
 print(np.sum(b))
-print('Adding tile to the right:')
-result = t1.dot(b)#.dot(t2))
-print(result)
-print(np.sum(result))
+print('\n')
 
-result = b.dot(t2)
+result = t1.dot(b)
 print(result)
 print(np.sum(result))
+print('\n')
+
+result = result.dot(t2)
+print(result)
+print(np.sum(result))
+print('\n')
